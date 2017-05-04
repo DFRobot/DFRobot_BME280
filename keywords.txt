@@ -1,0 +1,23 @@
+#######################################
+# Syntax Coloring Map Servo
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DFRobot_BME280	KEYWORD1	DFRobot_BME280
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+temperatureValue	KEYWORD2
+pressureValue	KEYWORD2
+altitudeValue		KEYWORD2
+humidityValue	KEYWORD2
+takeForcedMeasurement  KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
