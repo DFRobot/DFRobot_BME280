@@ -1,5 +1,5 @@
 /*!
- * @file bmp280test.ino
+ * @file basicTestI2C.ino
  * @brief DFRobot's Temperature、Pressure、Humidity and Approx altitude
  * @n [Get the module here]
  * @n This example read the Temperature、Pressure、Humidity and Altitude from BME280, and then print them
@@ -10,7 +10,7 @@
  *
  * @author [yangyang]
  * @version  V1.0
- * @date  2017-4-18
+ * @date  2017-7-5
  */
 
 #include <DFRobot_BME280.h>
@@ -19,7 +19,6 @@
 #define BME_CS 10
 
 DFRobot_BME280 bme; //I2C
-//DFRobot_BME280 bme(BME_CS); //SPI
 
 float temp, pa, hum, alt;
 
@@ -39,12 +38,12 @@ void setup() {
 void loop() { 
 	temp = bme.temperatureValue();
 	pa = bme.pressureValue();
-	hum = bme.altitudeValue(SEA_LEVEL_PRESSURE);
-	alt = bme.humidityValue();
+	hum = bme.humidityValue();
+	alt = bme.altitudeValue(SEA_LEVEL_PRESSURE);
 	
 	Serial.print("Temp:");
 	Serial.print(temp);
-	Serial.println(" ℃");
+	Serial.println(" *C");
 	
 	Serial.print("Pa:");
 	Serial.print(pa);
@@ -52,11 +51,11 @@ void loop() {
 	
 	Serial.print("Hum:");
 	Serial.print(hum);
-	Serial.println(" m");
+	Serial.println(" %");
 	
 	Serial.print("Alt:");
 	Serial.print(alt);
-	Serial.println(" %");
+	Serial.println(" m");
 	
 	Serial.println("------END------");
 	

@@ -8,7 +8,7 @@
  *
  * @author [yangyang]
  * @version  V1.0
- * @date  2017-4-18
+ * @date  2017-7-5
  */
 #include <DFRobot_BME280.h>
 
@@ -88,8 +88,13 @@ void DFRobot_BME280::write8(byte reg, byte value)
 {
 	if (cs == -1) {
 		Wire.beginTransmission(i2caddr);
+	#if ARDUINO >= 100
 		Wire.write((uint8_t)reg);
 		Wire.write((uint8_t)value);
+	#else
+		Wire.send((uint8_t)reg);
+		Wire.send((uint8_t)value);
+	#endif		
 		Wire.endTransmission();
 	} else {
 		SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
@@ -111,10 +116,18 @@ uint8_t DFRobot_BME280::read8(byte reg)
 
 	if (cs == -1) {
 		Wire.beginTransmission(i2caddr);
+	#if ARDUINO >= 100
 		Wire.write((uint8_t)reg);
+	#else
+		Wire.send((uint8_t)reg);
+	#endif
 		Wire.endTransmission();
 		Wire.requestFrom(i2caddr, (byte)1);
+	#if ARDUINO >= 100
 		value = Wire.read();
+	#else
+		value = Wire.receive();
+	#endif
 	} else {
 		SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
 		digitalWrite(cs, LOW);
@@ -137,10 +150,18 @@ uint16_t DFRobot_BME280::read16(byte reg)
 
 	if (cs == -1) {
 		Wire.beginTransmission(i2caddr);
+	#if ARDUINO >= 100
 		Wire.write((uint8_t)reg);
+	#else
+		Wire.send((uint8_t)reg);
+	#endif
 		Wire.endTransmission();
 		Wire.requestFrom(i2caddr, (byte)2);
+	#if ARDUINO >= 100
 		value = (Wire.read() << 8) | Wire.read();
+	#else
+		value = (Wire.receive() << 8) | Wire.receive();
+	#endif
 	} else {
 		SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
 		digitalWrite(cs, LOW);
@@ -186,15 +207,27 @@ uint32_t DFRobot_BME280::read24(byte reg)
 
 	if (cs == -1) {
 		Wire.beginTransmission(i2caddr);
+	#if ARDUINO >= 100
 		Wire.write((uint8_t)reg);
+	#else
+		Wire.send((uint8_t)reg);
+	#endif
 		Wire.endTransmission();
 		Wire.requestFrom(i2caddr, (byte)3);
-
+		
+	#if ARDUINO >= 100
 		value = Wire.read();
 		value <<= 8;
 		value |= Wire.read();
 		value <<= 8;
 		value |= Wire.read();
+	#else
+		value = Wire.receive();
+		value <<= 8;
+		value |= Wire.receive();
+		value <<= 8;
+		value |= Wire.receive();
+	#endif
 	} else {
 		SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
 		digitalWrite(cs, LOW);

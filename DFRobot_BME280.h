@@ -8,7 +8,7 @@
  *
  * @author [yangyang]
  * @version  V1.0
- * @date  2017-4-18
+ * @date  2017-7-5
  */
 #ifndef __BME280_H__
 #define __BME280_H__

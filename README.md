@@ -1,5 +1,7 @@
-#BME280
-DFRobot's Temperature、Pressure、Humidity and Approx altitude
+BME280
+##DFRobot's Temperature、Pressure、Humidity and Approx altitude
+
+Note: It is best to use on the 1.8.x version
 
  * @file bmp280test.ino
  * @brief DFRobot's Temperature、Pressure、Humidity and Approx altitude
@@ -12,7 +14,5 @@ DFRobot's Temperature、Pressure、Humidity and Approx altitude
  *
  * @author [yangyang]
  * @version  V1.0
- * @date  2017-4-18
+ * @date  2017-7-5
  *
- 
- # To Download, please click Green Button "Clone or Download" on the top right corner.
