@@ -43,7 +43,7 @@ void loop() {
 	
 	Serial.print("Temp:");
 	Serial.print(temp);
-	Serial.println(" *C");
+	Serial.println(" C");
 	
 	Serial.print("Pa:");
 	Serial.print(pa);
