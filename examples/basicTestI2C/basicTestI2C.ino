@@ -26,7 +26,7 @@ void setup() {
     Serial.begin(115200);
     
     // I2c default address is 0x76, if the need to change please modify bme.begin(Addr)
-    if (!bme.begin()) {
+    if (!bme.begin(0x77)) {
         Serial.println("No sensor device found, check line or address!");
         while (1);
     }
