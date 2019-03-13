@@ -1,250 +1,295 @@
-/*!
- * @file DFRobot_BME280.h
- * @brief DFRobot's BME280
- * @n Integrated environmental sensor
- *
- * @copyright    [DFRobot](http://www.dfrobot.com), 2016
- * @copyright    GNU Lesser General Public License
- *
- * @author [yangyang]
- * @version  V1.0
- * @date  2017-7-5
- */
-#ifndef __BME280_H__
-#define __BME280_H__
+/*
+ MIT License
 
+ Copyright (C) <2019> <@DFRobot Frank>
 
-#include <SPI.h>
-#include <Wire.h>
-#include <Arduino.h>
+　Permission is hereby granted, free of charge, to any person obtaining a copy of this
+　software and associated documentation files (the "Software"), to deal in the Software
+　without restriction, including without limitation the rights to use, copy, modify,
+　merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+　permit persons to whom the Software is furnished to do so.
 
-/*I2C ADDRESS/BITS*/
-#define BME280_ADDRESS                     0x76
-
-/*REGISTERS*/
-#define    BME280_REGISTER_DIG_T1          0x88
-#define    BME280_REGISTER_DIG_T2          0x8A
-#define    BME280_REGISTER_DIG_T3          0x8C
-
-#define    BME280_REGISTER_DIG_P1          0x8E
-#define    BME280_REGISTER_DIG_P2          0x90
-#define    BME280_REGISTER_DIG_P3          0x92
-#define    BME280_REGISTER_DIG_P4          0x94
-#define    BME280_REGISTER_DIG_P5          0x96
-#define    BME280_REGISTER_DIG_P6          0x98
-#define    BME280_REGISTER_DIG_P7          0x9A
-#define    BME280_REGISTER_DIG_P8          0x9C
-#define    BME280_REGISTER_DIG_P9          0x9E
-
-#define    BME280_REGISTER_DIG_H1          0xA1
-#define    BME280_REGISTER_DIG_H2          0xE1
-#define    BME280_REGISTER_DIG_H3          0xE3
-#define    BME280_REGISTER_DIG_H4          0xE4
-#define    BME280_REGISTER_DIG_H5          0xE5
-#define    BME280_REGISTER_DIG_H6          0xE7
-
-#define    BME280_REGISTER_CHIPID          0xD0
-#define    BME280_REGISTER_VERSION         0xD1
-#define    BME280_REGISTER_SOFTRESET       0xE0
-
-#define    BME280_REGISTER_CAL26           0xE1  // R calibration stored in 0xE1-0xF0
-
-#define    BME280_REGISTER_CONTROLHUMID    0xF2
-#define    BME280_REGISTER_STATUS          0XF3
-#define    BME280_REGISTER_CONTROL         0xF4
-#define    BME280_REGISTER_CONFIG          0xF5
-#define    BME280_REGISTER_PRESSUREDATA    0xF7
-#define    BME280_REGISTER_TEMPDATA        0xFA
-#define    BME280_REGISTER_HUMIDDATA       0xFD
-
-
-enum eSensorSampling {
-    SAMPLING_NONE = 0b000,
-    SAMPLING_X1   = 0b001,
-    SAMPLING_X2   = 0b010,
-    SAMPLING_X4   = 0b011,
-    SAMPLING_X8   = 0b100,
-    SAMPLING_X16  = 0b101
-};
-
-enum eSensorMode {
-    MODE_SLEEP  = 0b00,
-    MODE_FORCED = 0b01,
-    MODE_NORMAL = 0b11
-};
-
-enum eSensorFilter {
-    FILTER_OFF = 0b000,
-    FILTER_X2  = 0b001,
-    FILTER_X4  = 0b010,
-    FILTER_X8  = 0b011,
-    FILTER_X16 = 0b100
-};
-
-/*!
-*   @brief standby durations in ms
+　The above copyright notice and this permission notice shall be included in all copies or
+　substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-enum eStandbyDuration {
-    STANDBY_MS_0_5  = 0b000,
-    STANDBY_MS_10   = 0b110,
-    STANDBY_MS_20   = 0b111,
-    STANDBY_MS_62_5 = 0b001,
-    STANDBY_MS_125  = 0b010,
-    STANDBY_MS_250  = 0b011,
-    STANDBY_MS_500  = 0b100,
-    STANDBY_MS_1000 = 0b101
-};
 
+#ifndef DFROBOT_BME280_H
+#define DFROBOT_BME280_H
 
-/*CALIBRATION DATA*/
-typedef struct {
-    uint16_t digT1;
-    int16_t  digT2;
-    int16_t  digT3;
+#include "Arduino.h"
+#include "Wire.h"
 
-    uint16_t digP1;
-    int16_t  digP2;
-    int16_t  digP3;
-    int16_t  digP4;
-    int16_t  digP5;
-    int16_t  digP6;
-    int16_t  digP7;
-    int16_t  digP8;
-    int16_t  digP9;
-
-    uint8_t  digH1;
-    int16_t  digH2;
-    uint8_t  digH3;
-    int16_t  digH4;
-    int16_t  digH5;
-    int8_t   digH6;
-} tBme280CalibData;
-
-/*!
-*   @brief The ctrl_hum register
-*/
-typedef struct {
-    ///< unused - don't set
-    unsigned int none : 5;
-
-    ///< pressure oversampling
-    unsigned int osrsH : 3;
-
-    unsigned int get() {
-        return (osrsH);
-    }
-}tCtrlHum;
-/*!
-*   @brief The ctrl_meas register
-*/
-typedef struct{
-    ///< temperature oversampling
-    unsigned int osrsT : 3;
-
-    ///< pressure oversampling
-    unsigned int osrsP : 3;
-
-    ///< device mode
-    unsigned int mode : 2;
-
-    unsigned int get() {
-        return (osrsT << 5) | (osrsP << 3) | mode;
-    }
-}tCtrlMeas;
-
-    /*!
-    *   @brief The config register
-    */
-typedef struct {
-    ///< inactive duration (standby time) in normal mode
-    unsigned int sb : 3;
-
-    ///< filter settings
-    unsigned int filter : 3;
-
-    ///< unused - don't set
-    unsigned int none : 1;
-    unsigned int spi3wEn : 1;
-
-    unsigned int get() {
-        return (sb << 5) | (filter << 3) | spi3wEn;
-    }
-}tConfig;
+#ifndef PROGMEM
+# define PROGMEM
+#endif
 
 class DFRobot_BME280 {
+// defines
 public:
-    /*!
-    *   @brief  constructors
-    */
-    DFRobot_BME280(int8_t cspin = -1);
+  /**
+   * @brief Enum global status
+   */
+  typedef enum {
+    eStatusOK,
+    eStatusErr,
+    eStatusErrDeviceNotDetected,
+    eStatusErrParameter
+  } eStatus_t;
 
-    /*!
-    *   @brief  Initialise
-    */
-    bool  begin(uint8_t addr = BME280_ADDRESS);
+  typedef struct {
+    uint16_t    t1;
+    int16_t     t2, t3;
+    uint16_t    p1;
+    int16_t     p2, p3, p4, p5, p6, p7, p8, p9;
+    uint16_t    reserved0;
+  } sCalibrateDig_t;
 
-    void takeForcedMeasurement();
+  typedef struct {
+    uint8_t   h1;
+    int16_t   h2;
+    uint8_t   h3;
+    int16_t   h4;
+    int16_t   h5;
+    int8_t    h6;
+  } sCalibrateDigHumi_t;
 
-    /*!
-    *   @brief  Reads the temperature
-    */
-    float temperatureValue(void);
+  typedef struct {
+    uint8_t   osrs_h: 3;
+  } sRegCtrlHum_t;
 
-    /*!
-    *   @brief Reads the pressue
-    */
-    float pressureValue(void);
+  typedef struct {
+    uint8_t   im_update: 1;
+    uint8_t   reserved: 2;
+    uint8_t   measuring: 1;
+  } sRegStatus_t;
 
-    /*!
-    *   @brief Reads the humidity
-    */
-    float humidityValue(void);
+  /**
+   * @brief Enum control measurement mode (power)
+   */
+  typedef enum {
+    eCtrlMeasMode_sleep,
+    eCtrlMeasMode_forced,
+    eCtrlMeasMode_normal = 0x03
+  } eCtrlMeasMode_t;
 
-    /*!
-    *   @brief Reads the altitude
-    */
-    float altitudeValue(float seaLevel);
+  /**
+   * @brief Enum sampling
+   */
+  typedef enum {
+    eSampling_no,
+    eSampling_X1,
+    eSampling_X2,
+    eSampling_X4,
+    eSampling_X8,
+    eSampling_X16
+  } eSampling_t;
 
-    float seaLevelForAltitude(float altitude, float pressure);
+  typedef struct {
+    uint8_t   mode: 2;
+    uint8_t   osrs_p: 3;
+    uint8_t   osrs_t: 3;
+  } sRegCtrlMeas_t;
 
+  typedef enum {
+    eConfigSpi3w_en_disable,
+    eConfigSpi3w_en_enable
+  } eConfigSpi3w_en_t;
 
-    /*!
-    *    @brief  setup sensor
-    *
-    *    This is simply a overload to the normal begin()-function.
-    */
-    void setSampling(eSensorMode mode              = MODE_NORMAL,
-                     eSensorSampling tempSampling  = SAMPLING_X16,
-                     eSensorSampling pressSampling = SAMPLING_X16,
-                     eSensorSampling humSampling   = SAMPLING_X16,
-                     eSensorFilter filter          = FILTER_OFF,
-                     eStandbyDuration duration     = STANDBY_MS_0_5
-                    );
+  /**
+   * @brief Enum config filter
+   */
+  typedef enum {
+    eConfigFilter_off,
+    eConfigFilter_X2,
+    eConfigFilter_X4,
+    eConfigFilter_X8,
+    eConfigFilter_X16
+  } eConfigFilter_t;    // unknow config, can't underestand datasheet, datasheet error like
 
+  /**
+   * @brief Enum config standby time, unit ms
+   */
+  typedef enum {
+    eConfigTStandby_0_5,    // 0.5 ms
+    eConfigTStandby_62_5,
+    eConfigTStandby_125,
+    eConfigTStandby_250,
+    eConfigTStandby_500,
+    eConfigTStandby_1000,
+    eConfigTStandby_10,
+    eConfigTStandby_20
+  } eConfigTStandby_t;
 
-private:
-    void readCoefficients(void);
-    bool isReadingCalibration(void);
-    uint8_t spixfer(uint8_t x);
+  typedef struct {
+    uint8_t   spi3w_en: 1;
+    uint8_t   reserved1: 1;
+    uint8_t   filter: 3;
+    uint8_t   t_sb: 3;
+  } sRegConfig_t;
 
-    void      write8(byte reg, byte value);
-    uint8_t   read8(byte reg);
-    uint16_t  read16(byte reg);
-    uint32_t  read24(byte reg);
-    int16_t   readS16(byte reg);
-    uint16_t  read16_LE(byte reg); // little endian
-    int16_t   readS16_LE(byte reg); // little endian
+  typedef struct {
+    uint8_t   msb, lsb;
+    uint8_t   reserved: 4;
+    uint8_t   xlsb: 4;
+  } sRegPress_t;
 
-    uint8_t   i2caddr;
-    int32_t   sensorID;
-    int32_t   fine;
+  typedef struct {
+    uint8_t   msb, lsb;
+    uint8_t   reserved: 4;
+    uint8_t   xlsb: 4;
+  } sRegTemp_t;
 
-    int8_t cs;
+  #define BME280_REG_START    0x88
+  typedef struct {
+    sCalibrateDig_t   calib;
+    uint8_t   reserved0[(0xd0 - 0xa1 - 1)];
+    uint8_t   chip_id;
+    #define BME280_REG_CHIP_ID_DEFAULT    0x60
+    uint8_t   reserved1[(0xe0 - 0xd0 - 1)];
+    uint8_t   reset;
+    uint8_t   reserved2[(0xf2 - 0xe0 - 1)];
+    sRegCtrlHum_t   ctrl_hum;
+    sRegStatus_t    status;
+    sRegCtrlMeas_t    ctrl_meas;
+    sRegConfig_t      config;
+    uint8_t   reserved3;
+    sRegPress_t   press;
+    sRegTemp_t    temp;
+    uint16_t    humi;
+  } sRegs_t;
 
-    tBme280CalibData bme280Calib;
-    tConfig configReg;
-    tCtrlMeas measReg;
-    tCtrlHum humReg;
+// functions
+public:
+  DFRobot_BME280();
+
+  /**
+   * @brief begin Sensor begin
+   * @return Enum of eStatus_t
+   */
+  eStatus_t   begin();
+
+  /**
+   * @brief getTemperature Get temperature
+   * @return Temprature in Celsius
+   */
+  float       getTemperature();
+
+  /**
+   * @brief getPressure Get pressure
+   * @return Pressure in pa
+   */
+  uint32_t    getPressure();
+
+  /**
+   * @brief getHumidity Get humidity
+   * @return Humidity in percent
+   */
+  float       getHumidity();
+
+  /**
+   * @brief calAltitude Calculate altitude
+   * @param seaLevelPressure Sea level pressure
+   * @param pressure Pressure in pa
+   * @return Altitude in meter
+   */
+  float       calAltitude(float seaLevelPressure, uint32_t pressure);
+
+  /**
+   * @brief reset Reset sensor
+   */
+  void    reset();
+
+  /**
+   * @brief setCtrlMeasMode Set control measure mode
+   * @param eMode One enum of eCtrlMeasMode_t
+   */
+  void    setCtrlMeasMode(eCtrlMeasMode_t eMode);
+
+  /**
+   * @brief setCtrlMeasSamplingTemp Set control measure temperature oversampling
+   * @param eSampling One enum of eSampling_t
+   */
+  void    setCtrlMeasSamplingTemp(eSampling_t eSampling);
+
+  /**
+   * @brief setCtrlMeasSamplingPress Set control measure pressure oversampling
+   * @param eSampling One enum of eSampling_t
+   */
+  void    setCtrlMeasSamplingPress(eSampling_t eSampling);
+
+  /**
+   * @brief setCtrlHumiSampling Set control measure humidity oversampling
+   * @param eSampling One enum of eSampling_t
+   */
+  void    setCtrlHumiSampling(eSampling_t eSampling);
+
+  /**
+   * @brief setConfigFilter Set config filter
+   * @param eFilter One enum of eConfigFilter_t
+   */
+  void    setConfigFilter(eConfigFilter_t eFilter);
+
+  /**
+   * @brief setConfigTStandby Set config standby time
+   * @param eT One enum of eConfigTStandby_t
+   */
+  void    setConfigTStandby(eConfigTStandby_t eT);
+
+protected:
+  void    getCalibrate();
+
+  int32_t   getTemperatureRaw();
+  int32_t   getPressureRaw();
+  int32_t   getHumidityRaw();
+
+  uint8_t   getReg(uint8_t reg);
+  void      writeRegBits(uint8_t reg, uint8_t flied, uint8_t val);
+
+  virtual void    writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len) = 0;
+  virtual void    readReg(uint8_t reg, uint8_t *pBuf, uint16_t len) = 0;
+
+// variables
+public:
+  eStatus_t   lastOperateStatus;
+
+protected:
+  int32_t   _t_fine;
+
+  sCalibrateDig_t   _sCalib;
+  sCalibrateDigHumi_t   _sCalibHumi;
+};
+
+class DFRobot_BME280_IIC : public DFRobot_BME280 {
+public:
+  /**
+   * @brief Enum pin sdo states
+   */
+  typedef enum {
+    eSdo_low,
+    eSdo_high
+  } eSdo_t;
+
+  /**
+   * @brief DFRobot_BME280_IIC
+   * @param pWire Which TwoWire peripheral to operate
+   * @param eSdo Pin sdo status
+   */
+  DFRobot_BME280_IIC(TwoWire *pWire, eSdo_t eSdo);
+
+protected:
+  void    writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len);
+  void    readReg(uint8_t reg, uint8_t *pBuf, uint16_t len);
+
+protected:
+  TwoWire   *_pWire;
+
+  uint8_t   _addr;
+
 };
 
 #endif

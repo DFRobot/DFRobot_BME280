@@ -1,23 +1,57 @@
-#######################################
-# Syntax Coloring Map Servo
-#######################################
+eSdo_low	LITERAL1
+eSdo_high	LITERAL1
+eSdo_t	LITERAL1
 
-#######################################
-# Datatypes (KEYWORD1)
-#######################################
+DFRobot_BME280_IIC	KEYWORD1
 
-DFRobot_BME280	KEYWORD1	DFRobot_BME280
+lastOperateStatus	KEYWORD1
 
-#######################################
-# Methods and Functions (KEYWORD2)
-#######################################
-begin	KEYWORD2
-temperatureValue	KEYWORD2
-pressureValue	KEYWORD2
-altitudeValue		KEYWORD2
-humidityValue	KEYWORD2
-takeForcedMeasurement  KEYWORD2
+eStatusOK	LITERAL1
+eStatusErr	LITERAL1
+eStatusErrDeviceNotDetected	LITERAL1
+eStatusErrParameter	LITERAL1
+eStatus_t	LITERAL1
 
-#######################################
-# Constants (LITERAL1)
-#######################################
+eCtrlMeasMode_sleep	LITERAL1
+eCtrlMeasMode_forced	LITERAL1
+eCtrlMeasMode_normal	LITERAL1
+eCtrlMeasMode_t	LITERAL1
+
+eSampling_no	LITERAL1
+eSampling_X1	LITERAL1
+eSampling_X2	LITERAL1
+eSampling_X4	LITERAL1
+eSampling_X8	LITERAL1
+eSampling_X16	LITERAL1
+eSampling_t	LITERAL1
+
+eConfigFilter_off	LITERAL1
+eConfigFilter_X2	LITERAL1
+eConfigFilter_X4	LITERAL1
+eConfigFilter_X8	LITERAL1
+eConfigFilter_X16	LITERAL1
+
+eConfigTStandby_0_5	LITERAL1
+eConfigTStandby_62_5	LITERAL1
+eConfigTStandby_125	LITERAL1
+eConfigTStandby_250	LITERAL1
+eConfigTStandby_500	LITERAL1
+eConfigTStandby_1000	LITERAL1
+eConfigTStandby_2000	LITERAL1
+eConfigTStandby_4000	LITERAL1
+eConfigTStandby_t	LITERAL1
+
+begin	KEYWORD1
+getTemperature	KEYWORD1
+getPressure	KEYWORD1
+getHumidity	KEYWORD1
+calAltitude	KEYWORD1
+reset	KEYWORD1
+setCtrlMeasMode	KEYWORD1
+setCtrlHumiSampling	KEYWORD1
+setCtrlMeasSamplingTemp	KEYWORD1
+setCtrlMeasSamplingPress	KEYWORD1
+setConfigFilter	KEYWORD1
+setConfigTStandby	KEYWORD1
+
+BME	KEYWORD1

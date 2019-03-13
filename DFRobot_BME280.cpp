@@ -1,425 +1,273 @@
-/*!
- * @file DFRobot_BME280.cpp
- * @brief DFRobot's BME280
- * @n Integrated environmental sensor
- *
- * @copyright    [DFRobot](http://www.dfrobot.com), 2016
- * @copyright    GNU Lesser General Public License
- *
- * @author [yangyang]
- * @version  V1.0
- * @date  2017-7-5
- */
-#include <DFRobot_BME280.h>
+/*
+ MIT License
 
-DFRobot_BME280::DFRobot_BME280(int8_t cspin)
-    : cs(cspin)
-{ }
+ Copyright (C) <2019> <@DFRobot Frank>
 
+　Permission is hereby granted, free of charge, to any person obtaining a copy of this
+　software and associated documentation files (the "Software"), to deal in the Software
+　without restriction, including without limitation the rights to use, copy, modify,
+　merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+　permit persons to whom the Software is furnished to do so.
 
-bool DFRobot_BME280::begin(uint8_t addr)
+　The above copyright notice and this permission notice shall be included in all copies or
+　substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+#include "DFRobot_BME280.h"
+
+const DFRobot_BME280::sRegs_t PROGMEM   _sRegs = DFRobot_BME280::sRegs_t();
+#ifdef __AVR__
+typedef uint16_t    platformBitWidth_t;
+#else
+typedef uint32_t    platformBitWidth_t;
+#endif
+
+const platformBitWidth_t    _regsAddr = (platformBitWidth_t) &_sRegs;
+
+#define writeRegBitsHelper(reg, flied, val)   writeRegBits(regOffset(&(reg)), *(uint8_t*) &(flied), *(uint8_t*) &(val))
+
+#define __DBG   1
+#if __DBG
+# define __DBG_CODE(x)   Serial.print("__DBG_CODE: "); Serial.print(__FUNCTION__); Serial.print(" "); Serial.print(__LINE__); Serial.print(" "); x; Serial.println()
+#else
+# define __DBG_CODE(x)
+#endif
+
+uint8_t regOffset(const void *pReg)
 {
-    i2caddr = addr;
+  return ((platformBitWidth_t) pReg - _regsAddr + BME280_REG_START);
+}
 
-    if (cs == -1) {
-        // I2C
-        Wire.begin();
-    } else {
-        pinMode(cs, OUTPUT);
-        SPI.begin();
-        /*
-        SPI.setBitOrder(MSBFIRST);
-        SPI.setClockDivider(SPI_CLOCK_DIV32); // 500KHz
-        SPI.setDataMode(SPI_MODE0);
-        */
-    }
+DFRobot_BME280::DFRobot_BME280() {}
 
-    ///< check if sensor, i.e. the chip ID is correct
-    if (read8(BME280_REGISTER_CHIPID) != 0x60)
-        return false;
+DFRobot_BME280::eStatus_t DFRobot_BME280::begin()
+{
+  __DBG_CODE(Serial.print("temp register addr: "); Serial.print(regOffset(&_sRegs.temp), HEX));
+  __DBG_CODE(Serial.print("first register addr: "); Serial.print(regOffset(&_sRegs.calib), HEX));
+  __DBG_CODE(Serial.print("status register addr: "); Serial.print(regOffset(&_sRegs.status), HEX));
+  __DBG_CODE(Serial.print("id register addr: "); Serial.print(regOffset(&_sRegs.chip_id), HEX));
 
-    ///< reset the device using soft-reset
-    ///< this makes sure the IIR is off, etc.
-    write8(BME280_REGISTER_SOFTRESET, 0xB6);
-
-    ///< wait for chip to wake up.
+  uint8_t   temp = getReg(regOffset(&_sRegs.chip_id));
+  if((temp == BME280_REG_CHIP_ID_DEFAULT) && (lastOperateStatus == eStatusOK)) {
+    reset();
     delay(300);
-
-    ///< if chip is still reading calibration, delay
-    while (isReadingCalibration())
-        delay(100);
-
-    readCoefficients(); // read trimming parameters, see DS 4.2.2
-
-    setSampling(); // use defaults
-
-    return true;
+    getCalibrate();
+    setCtrlMeasSamplingPress(eSampling_X8);
+    setCtrlMeasSamplingTemp(eSampling_X8);
+    setCtrlHumiSampling(eSampling_X8);
+    setConfigFilter(eConfigFilter_off);
+    setConfigTStandby(eConfigTStandby_125);
+    setCtrlMeasMode(eCtrlMeasMode_normal);    // set control measurement mode to make these settings effective
+  } else
+    lastOperateStatus = eStatusErrDeviceNotDetected;
+  return lastOperateStatus;
 }
 
-void DFRobot_BME280::setSampling(eSensorMode       mode,
-                                 eSensorSampling   tempSampling,
-                                 eSensorSampling   pressSampling,
-                                 eSensorSampling   humSampling,
-                                 eSensorFilter     filter,
-                                 eStandbyDuration  duration)
+float DFRobot_BME280::getTemperature()
 {
-    measReg.mode     = mode;
-    measReg.osrsT   = tempSampling;
-    measReg.osrsP   = pressSampling;
-
-
-    humReg.osrsH    = humSampling;
-    configReg.filter = filter;
-    configReg.sb   = duration;
-
-
-    ///< you must make sure to also set REGISTER_CONTROL after setting the
-    ///< CONTROLHUMID register, otherwise the values won't be applied (see DS 5.4.3)
-    write8(BME280_REGISTER_CONTROLHUMID, humReg.get());
-    write8(BME280_REGISTER_CONFIG, configReg.get());
-    write8(BME280_REGISTER_CONTROL, measReg.get());
+  int32_t   raw = getTemperatureRaw();
+  float     rslt = 0;
+  int32_t   v1, v2;
+  if(lastOperateStatus == eStatusOK) {
+    v1 = ((((raw >> 3) - ((int32_t) _sCalib.t1 << 1))) * ((int32_t) _sCalib.t2)) >> 11;
+    v2 = (((((raw >> 4) - ((int32_t) _sCalib.t1)) * ((raw >> 4) - ((int32_t) _sCalib.t1))) >> 12) * ((int32_t) _sCalib.t3)) >> 14;
+    _t_fine = v1 + v2;
+    rslt = (_t_fine * 5 + 128) >> 8;
+    return (rslt / 100);
+  }
+  return 0;
 }
 
-
-/*!
-*   @brief  Writes an 8 bit value over I2C or SPI
-*/
-void DFRobot_BME280::write8(byte reg, byte value)
+uint32_t DFRobot_BME280::getPressure()
 {
-    if (cs == -1) {
-        Wire.beginTransmission(i2caddr);
-    #if ARDUINO >= 100
-        Wire.write((uint8_t)reg);
-        Wire.write((uint8_t)value);
-    #else
-        Wire.send((uint8_t)reg);
-        Wire.send((uint8_t)value);
-    #endif        
-        Wire.endTransmission();
-    } else {
-        SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-        digitalWrite(cs, LOW);
-        SPI.transfer(reg & ~0x80); // write, bit 7 low
-        SPI.transfer(value);
-        digitalWrite(cs, HIGH);
-        SPI.endTransaction(); // release the SPI bus
-    }
+  getTemperature();   // update _t_fine
+  int32_t   raw = getPressureRaw();
+  int64_t   rslt = 0;
+  int64_t   v1, v2;
+  if(lastOperateStatus == eStatusOK) {
+    v1 = ((int64_t) _t_fine) - 128000;
+    v2 = v1 * v1 * (int64_t) _sCalib.p6;
+    v2 = v2 + ((v1 * (int64_t) _sCalib.p5) << 17);
+    v2 = v2 + (((int64_t) _sCalib.p4) << 35);
+    v1 = ((v1 * v1 * (int64_t) _sCalib.p3) >> 8) + ((v1 * (int64_t) _sCalib.p2) << 12);
+    v1 = (((((int64_t) 1) << 47) + v1)) * ((int64_t) _sCalib.p1) >> 33;
+    if(v1 == 0)
+      return 0;
+    rslt = 1048576 - raw;
+    rslt = (((rslt << 31) - v2) * 3125) / v1;
+    v1 = (((int64_t) _sCalib.p9) * (rslt >> 13) * (rslt >> 13)) >> 25;
+    v2 = (((int64_t) _sCalib.p8) * rslt) >> 19;
+    rslt = ((rslt + v1 + v2) >> 8) + (((int64_t) _sCalib.p7) << 4);
+    return (uint32_t) (rslt / 256);
+  }
+  return 0;
 }
 
-
-/*!
-*   @brief  Reads an 8 bit value over I2C or SPI
-*/
-uint8_t DFRobot_BME280::read8(byte reg)
+float DFRobot_BME280::getHumidity()
 {
-    uint8_t value;
-
-    if (cs == -1) {
-        Wire.beginTransmission(i2caddr);
-    #if ARDUINO >= 100
-        Wire.write((uint8_t)reg);
-    #else
-        Wire.send((uint8_t)reg);
-    #endif
-        Wire.endTransmission();
-        Wire.requestFrom(i2caddr, (byte)1);
-    #if ARDUINO >= 100
-        value = Wire.read();
-    #else
-        value = Wire.receive();
-    #endif
-    } else {
-        SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-        digitalWrite(cs, LOW);
-        SPI.transfer(reg | 0x80); // read, bit 7 high
-        value = SPI.transfer(0);
-        digitalWrite(cs, HIGH);
-        SPI.endTransaction(); // release the SPI bus
-    }
-
-    return value;
+  getTemperature();   // update _t_fine
+  int32_t   raw = getHumidityRaw();
+  int32_t   v1;
+  __DBG_CODE(Serial.print("raw: "); Serial.print(raw));
+  if(lastOperateStatus == eStatusOK) {
+    v1 = (_t_fine - ((int32_t) 76800));
+    v1 = (((((raw <<14) - (((int32_t) _sCalibHumi.h4) << 20) - (((int32_t) _sCalibHumi.h5) * v1)) +
+         ((int32_t) 16384)) >> 15) * (((((((v1 * ((int32_t) _sCalibHumi.h6)) >> 10) * (((v1 *
+         ((int32_t) _sCalibHumi.h3)) >> 11) + ((int32_t) 32768))) >> 10) + ((int32_t) 2097152)) *
+         ((int32_t) _sCalibHumi.h2) + 8192) >> 14));
+    v1 = (v1 - (((((v1 >> 15) * (v1 >> 15)) >> 7) * ((int32_t) _sCalibHumi.h1)) >> 4));
+    v1 = (v1 < 0 ? 0 : v1);
+    v1 = (v1 > 419430400 ? 419430400 : v1);
+    return ((float) (v1 >> 12)) / 1024.0f;
+  }
+  return 0;
 }
 
-
-/*!
-*   @brief  Reads a 16 bit value over I2C or SPI
-*/
-uint16_t DFRobot_BME280::read16(byte reg)
+float DFRobot_BME280::calAltitude(float seaLevelPressure, uint32_t pressure)
 {
-    uint16_t value;
-
-    if (cs == -1) {
-        Wire.beginTransmission(i2caddr);
-    #if ARDUINO >= 100
-        Wire.write((uint8_t)reg);
-    #else
-        Wire.send((uint8_t)reg);
-    #endif
-        Wire.endTransmission();
-        Wire.requestFrom(i2caddr, (byte)2);
-    #if ARDUINO >= 100
-        value = (Wire.read() << 8) | Wire.read();
-    #else
-        value = (Wire.receive() << 8) | Wire.receive();
-    #endif
-    } else {
-        SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-        digitalWrite(cs, LOW);
-        SPI.transfer(reg | 0x80); // read, bit 7 high
-        value = (SPI.transfer(0) << 8) | SPI.transfer(0);
-        digitalWrite(cs, HIGH);
-        SPI.endTransaction(); // release the SPI bus
-    }
-
-    return value;
+  return 44330 * (1.0f - pow(pressure / 100 / seaLevelPressure, 0.1903));
 }
 
-
-uint16_t DFRobot_BME280::read16_LE(byte reg)
+void DFRobot_BME280::reset()
 {
-    uint16_t temp = read16(reg);
-    return (temp >> 8) | (temp << 8);
+  uint8_t   temp = 0xb6;
+  writeReg(regOffset(&_sRegs.reset), (uint8_t*) &temp, sizeof(temp));
+  delay(100);
 }
 
-
-/*!
-*   @brief  Reads a signed 16 bit value over I2C or SPI
-*/
-int16_t DFRobot_BME280::readS16(byte reg)
+void DFRobot_BME280::setCtrlMeasMode(eCtrlMeasMode_t eMode)
 {
-    return (int16_t)read16(reg);
+  sRegCtrlMeas_t    sRegFlied = {0}, sRegVal = {0};
+  sRegFlied.mode = 0xff; sRegVal.mode = eMode;
+  writeRegBitsHelper(_sRegs.ctrl_meas, sRegFlied, sRegVal);
 }
 
-
-int16_t DFRobot_BME280::readS16_LE(byte reg)
+void DFRobot_BME280::setCtrlMeasSamplingTemp(eSampling_t eSampling)
 {
-    return (int16_t)read16_LE(reg);
+  sRegCtrlMeas_t    sRegFlied = {0}, sRegVal = {0};
+  sRegFlied.osrs_t = 0xff; sRegVal.osrs_t = eSampling;
+  writeRegBitsHelper(_sRegs.ctrl_meas, sRegFlied, sRegVal);
 }
 
-
-/*!
-*   @brief  Reads a 24 bit value over I2C
-*/
-
-uint32_t DFRobot_BME280::read24(byte reg)
+void DFRobot_BME280::setCtrlMeasSamplingPress(eSampling_t eSampling)
 {
-    uint32_t value;
-
-    if (cs == -1) {
-        Wire.beginTransmission(i2caddr);
-    #if ARDUINO >= 100
-        Wire.write((uint8_t)reg);
-    #else
-        Wire.send((uint8_t)reg);
-    #endif
-        Wire.endTransmission();
-        Wire.requestFrom(i2caddr, (byte)3);
-        
-    #if ARDUINO >= 100
-        value = Wire.read();
-        value <<= 8;
-        value |= Wire.read();
-        value <<= 8;
-        value |= Wire.read();
-    #else
-        value = Wire.receive();
-        value <<= 8;
-        value |= Wire.receive();
-        value <<= 8;
-        value |= Wire.receive();
-    #endif
-    } else {
-        SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
-        digitalWrite(cs, LOW);
-        SPI.transfer(reg | 0x80); // read, bit 7 high
-
-        value = SPI.transfer(0);
-        value <<= 8;
-        value |= SPI.transfer(0);
-        value <<= 8;
-        value |= SPI.transfer(0);
-
-        digitalWrite(cs, HIGH);
-        SPI.endTransaction(); // release the SPI bus
-    }
-
-    return value;
+  sRegCtrlMeas_t    sRegFlied = {0}, sRegVal = {0};
+  sRegFlied.osrs_p = 0xff; sRegVal.osrs_p = eSampling;
+  writeRegBitsHelper(_sRegs.ctrl_meas, sRegFlied, sRegVal);
 }
 
-
-/*!
-*    @brief  Take a new measurement (only possible in forced mode)
-*/
-void DFRobot_BME280::takeForcedMeasurement()
+void DFRobot_BME280::setCtrlHumiSampling(eSampling_t eSampling)
 {
-    /* If we are in forced mode, the BME sensor goes back to sleep after each
-     * measurement and we need to set it to forced mode once at this point, so
-     * it will take the next measurement and then return to sleep again.
-     * In normal mode simply does new measurements periodically.
-     */
-    if (measReg.mode == MODE_FORCED) {
-        ///< set to forced mode, i.e. "take next measurement"
-        write8(BME280_REGISTER_CONTROL, measReg.get());
-        ///< wait until measurement has been completed, otherwise we would read
-        ///< the values from the last measurement
-        while (read8(BME280_REGISTER_STATUS) & 0x08)
-            delay(1);
-    }
+  sRegCtrlHum_t   sRegFlied = {0}, sRegVal = {0};
+  sRegFlied.osrs_h = 0xff; sRegVal.osrs_h = eSampling;
+  writeRegBitsHelper(_sRegs.ctrl_hum, sRegFlied, sRegVal);
 }
 
-
-/*!
-*    @brief  Reads the factory-set coefficients
-*/
-void DFRobot_BME280::readCoefficients(void)
+void DFRobot_BME280::setConfigFilter(eConfigFilter_t eFilter)
 {
-    bme280Calib.digT1 = read16_LE(BME280_REGISTER_DIG_T1);
-    bme280Calib.digT2 = readS16_LE(BME280_REGISTER_DIG_T2);
-    bme280Calib.digT3 = readS16_LE(BME280_REGISTER_DIG_T3);
-
-    bme280Calib.digP1 = read16_LE(BME280_REGISTER_DIG_P1);
-    bme280Calib.digP2 = readS16_LE(BME280_REGISTER_DIG_P2);
-    bme280Calib.digP3 = readS16_LE(BME280_REGISTER_DIG_P3);
-    bme280Calib.digP4 = readS16_LE(BME280_REGISTER_DIG_P4);
-    bme280Calib.digP5 = readS16_LE(BME280_REGISTER_DIG_P5);
-    bme280Calib.digP6 = readS16_LE(BME280_REGISTER_DIG_P6);
-    bme280Calib.digP7 = readS16_LE(BME280_REGISTER_DIG_P7);
-    bme280Calib.digP8 = readS16_LE(BME280_REGISTER_DIG_P8);
-    bme280Calib.digP9 = readS16_LE(BME280_REGISTER_DIG_P9);
-
-    bme280Calib.digH1 = read8(BME280_REGISTER_DIG_H1);
-    bme280Calib.digH2 = readS16_LE(BME280_REGISTER_DIG_H2);
-    bme280Calib.digH3 = read8(BME280_REGISTER_DIG_H3);
-    bme280Calib.digH4 = (read8(BME280_REGISTER_DIG_H4) << 4) | (read8(BME280_REGISTER_DIG_H4+1) & 0xF);
-    bme280Calib.digH5 = (read8(BME280_REGISTER_DIG_H5+1) << 4) | (read8(BME280_REGISTER_DIG_H5) >> 4);
-    bme280Calib.digH6 = (int8_t)read8(BME280_REGISTER_DIG_H6);
+  sRegConfig_t    sRegFlied = {0}, sRegVal = {0};
+  sRegFlied.filter = 0xff; sRegVal.filter = eFilter;
+  writeRegBitsHelper(_sRegs.config, sRegFlied, sRegVal);
 }
 
-
-/*!
-*    @brief return true if chip is busy reading cal data
-*/
-bool DFRobot_BME280::isReadingCalibration(void)
+void DFRobot_BME280::setConfigTStandby(eConfigTStandby_t eT)
 {
-    uint8_t const rStatus = read8(BME280_REGISTER_STATUS);
+  sRegConfig_t    sRegFlied = {0}, sRegVal = {0};
+  sRegFlied.t_sb = 0xff; sRegVal.t_sb = eT;
+  writeRegBitsHelper(_sRegs.config, sRegFlied, sRegVal);
+}
+void DFRobot_BME280::getCalibrate()
+{
+  readReg(regOffset(&_sRegs.calib), (uint8_t*) &_sCalib, sizeof(_sCalib));
 
-    return (rStatus & (1 << 0)) != 0;
+  readReg(regOffset(&_sRegs.calib) + sizeof(_sCalib) - 1, (uint8_t*) &_sCalibHumi.h1, sizeof(_sCalibHumi.h1));
+  readReg(0xe1, (uint8_t*) &_sCalibHumi.h2, sizeof(_sCalibHumi.h2));    // fxxk discontinuous address
+  readReg(0xe3, (uint8_t*) &_sCalibHumi.h3, sizeof(_sCalibHumi.h3));
+  readReg(0xe4, (uint8_t*) &_sCalibHumi.h4, sizeof(_sCalibHumi.h4));
+  readReg(0xe5, (uint8_t*) &_sCalibHumi.h5, sizeof(_sCalibHumi.h5));
+  readReg(0xe7, (uint8_t*) &_sCalibHumi.h6, sizeof(_sCalibHumi.h6));
+
+  // 0xe4 / 0xe5 [3: 0] = dig_h4 [11: 4] / [3: 0]
+  _sCalibHumi.h4 = ((_sCalibHumi.h4 >> 8) & 0x0f) | ((_sCalibHumi.h4 & 0x00ff) << 4);
+  // 0xe5 [7: 4] / 0xe6 = dig_h5 [3: 0] / [11: 4]
+  _sCalibHumi.h5 = ((_sCalibHumi.h5 & 0xff00) >> 4) | ((_sCalibHumi.h5 & 0x00f0) >> 4);   // fxxk fxxk fxxk very strange arrangement
 }
 
-
-/*!
-*    @brief  Returns the temperature from the sensor
-*/
-float DFRobot_BME280::temperatureValue(void)
+int32_t DFRobot_BME280::getTemperatureRaw()
 {
-    int32_t var1, var2;
-
-    int32_t adc = read24(BME280_REGISTER_TEMPDATA);
-    if (adc == 0x800000) // value in case temp measurement was disabled
-        return NAN;
-    adc >>= 4;
-
-    var1 = ((((adc>>3) - ((int32_t)bme280Calib.digT1 <<1))) *
-            ((int32_t)bme280Calib.digT2)) >> 11;
-
-    var2 = (((((adc>>4) - ((int32_t)bme280Calib.digT1)) *
-              ((adc>>4) - ((int32_t)bme280Calib.digT1))) >> 12) *
-            ((int32_t)bme280Calib.digT3)) >> 14;
-
-    fine = var1 + var2;
-
-    float T = (fine * 5 + 128) >> 8;
-    return T/100;
+  sRegTemp_t    sReg;
+  readReg(regOffset(&_sRegs.temp), (uint8_t*) &sReg, sizeof(sReg));
+  return (((uint32_t) sReg.msb << 12) | ((uint32_t) sReg.lsb << 4) | ((uint32_t) sReg.xlsb));
 }
 
-
-/*!
-*    @brief  Returns the temperature from the sensor
-*/
-float DFRobot_BME280::pressureValue(void)
+int32_t DFRobot_BME280::getPressureRaw()
 {
-    int64_t var1, var2, p;
-
-    temperatureValue(); // must be done first to get t_fine
-
-    int32_t adc = read24(BME280_REGISTER_PRESSUREDATA);
-    if (adc == 0x800000) // value in case pressure measurement was disabled
-        return NAN;
-    adc >>= 4;
-
-    var1 = ((int64_t)fine) - 128000;
-    var2 = var1 * var1 * (int64_t)bme280Calib.digP6;
-    var2 = var2 + ((var1*(int64_t)bme280Calib.digP5)<<17);
-    var2 = var2 + (((int64_t)bme280Calib.digP4)<<35);
-    var1 = ((var1 * var1 * (int64_t)bme280Calib.digP3)>>8) +
-           ((var1 * (int64_t)bme280Calib.digP2)<<12);
-    var1 = (((((int64_t)1)<<47)+var1))*((int64_t)bme280Calib.digP1)>>33;
-
-    if (var1 == 0) {
-        return 0; // avoid exception caused by division by zero
-    }
-    p = 1048576 - adc;
-    p = (((p<<31) - var2)*3125) / var1;
-    var1 = (((int64_t)bme280Calib.digP9) * (p>>13) * (p>>13)) >> 25;
-    var2 = (((int64_t)bme280Calib.digP8) * p) >> 19;
-
-    p = ((p + var1 + var2) >> 8) + (((int64_t)bme280Calib.digP7)<<4);
-    return (float)p/256;
+  sRegPress_t   sReg;
+  readReg(regOffset(&_sRegs.press), (uint8_t*) &sReg, sizeof(sReg));
+  return (((uint32_t) sReg.msb << 12) | ((uint32_t) sReg.lsb << 4) | ((uint32_t) sReg.xlsb));
 }
 
-
-/*!
-*    @brief  Returns the humidity from the sensor
-*/
-float DFRobot_BME280::humidityValue(void)
+int32_t DFRobot_BME280::getHumidityRaw()
 {
-    temperatureValue(); // must be done first to get t_fine
-
-    int32_t adc_H = read16(BME280_REGISTER_HUMIDDATA);
-    if (adc_H == 0x8000) // value in case humidity measurement was disabled
-        return NAN;
-
-    int32_t tmp;
-
-    tmp = (fine - ((int32_t)76800));
-
-    tmp = (((((adc_H << 14) - (((int32_t)bme280Calib.digH4) << 20) -
-                    (((int32_t)bme280Calib.digH5) * tmp)) + ((int32_t)16384)) >> 15) *
-                 (((((((tmp * ((int32_t)bme280Calib.digH6)) >> 10) *
-                      (((tmp * ((int32_t)bme280Calib.digH3)) >> 11) + ((int32_t)32768))) >> 10) +
-                    ((int32_t)2097152)) * ((int32_t)bme280Calib.digH2) + 8192) >> 14));
-
-    tmp = (tmp - (((((tmp >> 15) * (tmp >> 15)) >> 7) *
-                               ((int32_t)bme280Calib.digH1)) >> 4));
-
-    tmp = (tmp < 0) ? 0 : tmp;
-    tmp = (tmp > 419430400) ? 419430400 : tmp;
-    float h = (tmp>>12);
-    return  h / 1024.0;
+  uint8_t   pBuf[2];
+  readReg(regOffset(&_sRegs.humi), (uint8_t*) pBuf, sizeof(pBuf));
+  return (((int32_t) pBuf[0] << 8) | (int32_t) pBuf[1]);
 }
 
-
-/*!
-*    Calculates the altitude (in meters) from the specified atmospheric
-*    pressure (in hPa), and sea-level pressure (in hPa).
-*
-*    @param  seaLevel      Sea-level pressure in hPa
-*    @param  atmospheric   Atmospheric pressure in hPa
-*/
-float DFRobot_BME280::altitudeValue(float seaLevel)
+uint8_t DFRobot_BME280::getReg(uint8_t reg)
 {
-    float atmospheric = pressureValue() / 100.0F;
-    return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
+  uint8_t   temp;
+  readReg(reg, (uint8_t*) &temp, sizeof(temp));
+  return temp;
 }
 
-
-/*!
-*    Calculates the pressure at sea level (in hPa) from the specified altitude
-*    (in meters), and atmospheric pressure (in hPa).
-*    @param  altitude      Altitude in meters
-*    @param  atmospheric   Atmospheric pressure in hPa
-*/
-float DFRobot_BME280::seaLevelForAltitude(float altitude, float atmospheric)
+void DFRobot_BME280::writeRegBits(uint8_t reg, uint8_t flied, uint8_t val)
 {
-    return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
+  uint8_t   temp;
+  readReg(reg, (uint8_t*) &temp, sizeof(temp));
+  temp &= ~flied;
+  temp |= val;
+  writeReg(reg, (uint8_t*) &temp, sizeof(temp));
+}
+
+DFRobot_BME280_IIC::DFRobot_BME280_IIC(TwoWire *pWire, eSdo_t eSdo)
+{
+  _pWire = pWire;
+  if(eSdo == eSdo_low)
+    _addr = 0x76;
+  else
+    _addr = 0x77;
+}
+
+void DFRobot_BME280_IIC::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
+{
+  lastOperateStatus = eStatusErrDeviceNotDetected;
+  _pWire->begin();
+  _pWire->beginTransmission(_addr);
+  _pWire->write(reg);
+  if(_pWire->endTransmission() != 0)
+    return;
+
+  _pWire->requestFrom(_addr, len);
+  for(uint8_t i = 0; i < len; i ++)
+    pBuf[i] = _pWire->read();
+  lastOperateStatus = eStatusOK;
+}
+
+void DFRobot_BME280_IIC::writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
+{
+  lastOperateStatus = eStatusErrDeviceNotDetected;
+  _pWire->begin();
+  _pWire->beginTransmission(_addr);
+  _pWire->write(reg);
+  for(uint8_t i = 0; i < len; i ++)
+    _pWire->write(pBuf[i]);
+  if(_pWire->endTransmission() != 0)
+    return;
+  lastOperateStatus = eStatusOK;
 }
