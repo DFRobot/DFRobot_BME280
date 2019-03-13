@@ -2,7 +2,7 @@ eSdo_low	LITERAL1
 eSdo_high	LITERAL1
 eSdo_t	LITERAL1
 
-DFRobot_BMP280_IIC	KEYWORD1
+DFRobot_BME280_IIC	KEYWORD1
 
 lastOperateStatus	KEYWORD1
 
@@ -44,12 +44,14 @@ eConfigTStandby_t	LITERAL1
 begin	KEYWORD1
 getTemperature	KEYWORD1
 getPressure	KEYWORD1
+getHumidity	KEYWORD1
 calAltitude	KEYWORD1
 reset	KEYWORD1
 setCtrlMeasMode	KEYWORD1
+setCtrlHumiSampling	KEYWORD1
 setCtrlMeasSamplingTemp	KEYWORD1
 setCtrlMeasSamplingPress	KEYWORD1
 setConfigFilter	KEYWORD1
 setConfigTStandby	KEYWORD1
 
-BMP	KEYWORD1
+BME	KEYWORD1

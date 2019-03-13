@@ -1,10 +1,10 @@
-# BMP280
+# BME280
 DFRobot's Temperature, Pressure and Approx altitude
 
-## DFRobot_BMP280 Library for Arduino
+## DFRobot_BME280 Library for Arduino
 ---------------------------------------------------------
-Provides an Arduino library for reading and interpreting Bosch BMP280 data over I2C. <br>
-Used to read current temperature, air pressure and calculate altitude.
+Provides an Arduino library for reading and interpreting Bosch BME280 data over I2C. <br>
+Used to read current temperature, air pressure, calculate altitude and humidity.
 
 ## Table of Contents
 
@@ -19,14 +19,14 @@ Used to read current temperature, air pressure and calculate altitude.
 
 ## Installation
 
-To use this library download the zip file, uncompress it to a folder named DFRobot_BMP280. 
-Download the zip file first to use this library and uncompress it to a folder named DFRobot_BMP280. 
+To use this library download the zip file, uncompress it to a folder named DFRobot_BME280. 
+Download the zip file first to use this library and uncompress it to a folder named DFRobot_BME280. 
 
 ## Methods
 
 ```C++
 
-class DFRobot_BMP280 {
+class DFRobot_BME280 {
 // defines
 public:
   /**
@@ -87,7 +87,7 @@ public:
 
 // functions
 public:
-  DFRobot_BMP280();
+  DFRobot_BME280();
 
   /**
    * @brief begin Sensor begin
@@ -106,6 +106,12 @@ public:
    * @return Pressure in pa
    */
   uint32_t    getPressure();
+  
+  /**
+   * @brief getHumidity Get humidity
+   * @return Humidity in percent
+   */
+  float       getHumidity();
 
   /**
    * @brief calAltitude Calculate altitude
@@ -137,7 +143,13 @@ public:
    * @param eSampling One enum of eSampling_t
    */
   void    setCtrlMeasSamplingPress(eSampling_t eSampling);
-
+  
+  /**
+   * @brief setCtrlHumiSampling Set control measure humidity oversampling
+   * @param eSampling One enum of eSampling_t
+   */
+  void    setCtrlHumiSampling(eSampling_t eSampling);
+  
   /**
    * @brief setConfigFilter Set config filter
    * @param eFilter One enum of eConfigFilter_t
@@ -158,7 +170,7 @@ public:
   
 };
 
-class DFRobot_BMP280_IIC : public DFRobot_BMP280 {
+class DFRobot_BME280_IIC : public DFRobot_BME280 {
 public:
   /**
    * @brief Enum pin sdo states
@@ -169,11 +181,11 @@ public:
   } eSdo_t;
 
   /**
-   * @brief DFRobot_BMP280_IIC
+   * @brief DFRobot_BME280_IIC
    * @param pWire Which TwoWire peripheral to operate
    * @param eSdo Pin sdo status
    */
-  DFRobot_BMP280_IIC(TwoWire *pWire, eSdo_t eSdo);
+  DFRobot_BME280_IIC(TwoWire *pWire, eSdo_t eSdo);
 };
 
 ```
