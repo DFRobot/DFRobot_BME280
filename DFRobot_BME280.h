@@ -248,7 +248,7 @@ protected:
   int32_t   getHumidityRaw();
 
   uint8_t   getReg(uint8_t reg);
-  void      writeRegBits(uint8_t reg, uint8_t flied, uint8_t val);
+  void      writeRegBits(uint8_t reg, uint8_t field, uint8_t val);
 
   virtual void    writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len) = 0;
   virtual void    readReg(uint8_t reg, uint8_t *pBuf, uint16_t len) = 0;

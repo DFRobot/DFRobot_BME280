@@ -226,11 +226,11 @@ uint8_t DFRobot_BME280::getReg(uint8_t reg)
   return temp;
 }
 
-void DFRobot_BME280::writeRegBits(uint8_t reg, uint8_t flied, uint8_t val)
+void DFRobot_BME280::writeRegBits(uint8_t reg, uint8_t field, uint8_t val)
 {
   uint8_t   temp;
   readReg(reg, (uint8_t*) &temp, sizeof(temp));
-  temp &= ~flied;
+  temp &= ~field;
   temp |= val;
   writeReg(reg, (uint8_t*) &temp, sizeof(temp));
 }
