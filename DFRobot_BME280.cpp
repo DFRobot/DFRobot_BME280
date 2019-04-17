@@ -235,13 +235,10 @@ void DFRobot_BME280::writeRegBits(uint8_t reg, uint8_t field, uint8_t val)
   writeReg(reg, (uint8_t*) &temp, sizeof(temp));
 }
 
-DFRobot_BME280_IIC::DFRobot_BME280_IIC(TwoWire *pWire, eSdo_t eSdo)
+DFRobot_BME280_IIC::DFRobot_BME280_IIC(TwoWire *pWire, uint8_t addr)
 {
   _pWire = pWire;
-  if(eSdo == eSdo_low)
-    _addr = 0x76;
-  else
-    _addr = 0x77;
+  _addr = addr;
 }
 
 void DFRobot_BME280_IIC::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
@@ -254,7 +251,7 @@ void DFRobot_BME280_IIC::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
     return;
 
   _pWire->requestFrom(_addr, len);
-  for(uint8_t i = 0; i < len; i ++)
+  for(uint16_t i = 0; i < len; i ++)
     pBuf[i] = _pWire->read();
   lastOperateStatus = eStatusOK;
 }
@@ -265,9 +262,43 @@ void DFRobot_BME280_IIC::writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
   _pWire->begin();
   _pWire->beginTransmission(_addr);
   _pWire->write(reg);
-  for(uint8_t i = 0; i < len; i ++)
+  for(uint16_t i = 0; i < len; i ++)
     _pWire->write(pBuf[i]);
   if(_pWire->endTransmission() != 0)
     return;
   lastOperateStatus = eStatusOK;
+}
+
+DFRobot_BME280_SPI::DFRobot_BME280_SPI(SPIClass *pSpi, uint16_t pin)
+{
+  _pSpi = pSpi;
+  pinMode(pin, OUTPUT);
+  digitalWrite(pin, HIGH);
+  _pinCs = pin;
+  _pSpi->begin();
+  lastOperateStatus = eStatusOK;
+}
+
+void DFRobot_BME280_SPI::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
+{
+  _pSpi->beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_pinCs, LOW);
+  _pSpi->transfer(reg | 0x80);
+  for(uint16_t i = 0; i < len; i ++) {
+    pBuf[i] = _pSpi->transfer(0x00);
+  }
+  digitalWrite(_pinCs, HIGH);
+  _pSpi->endTransaction();
+}
+
+void DFRobot_BME280_SPI::writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
+{
+  _pSpi->beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_pinCs, LOW);
+  _pSpi->transfer(reg & 0x7f);
+  for(uint16_t i = 0; i < len; i ++) {
+    _pSpi->transfer(pBuf[i]);
+  }
+  digitalWrite(_pinCs, HIGH);
+  _pSpi->endTransaction();
 }

@@ -171,14 +171,8 @@ public:
 };
 
 class DFRobot_BME280_IIC : public DFRobot_BME280 {
+
 public:
-  /**
-   * @brief Enum pin sdo states
-   */
-  typedef enum {
-    eSdo_low,
-    eSdo_high
-  } eSdo_t;
 
   /**
    * @brief DFRobot_BME280_IIC
@@ -186,6 +180,17 @@ public:
    * @param eSdo Pin sdo status
    */
   DFRobot_BME280_IIC(TwoWire *pWire, eSdo_t eSdo);
+};
+
+class DFRobot_BME280_SPI : public DFRobot_BME280 {
+
+public:
+  /**
+   * @brief DFRobot_BME280_SPI
+   * @param pSpi Which SPIClass peripheral to oprate
+   * @param pin Sensor cs pin id
+   */
+  DFRobot_BME280_SPI(SPIClass *pSpi, uint16_t pin);
 };
 
 ```

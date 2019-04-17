@@ -3,6 +3,7 @@ eSdo_high	LITERAL1
 eSdo_t	LITERAL1
 
 DFRobot_BME280_IIC	KEYWORD1
+DFRobot_BME280_SPI	KEYWORD1
 
 lastOperateStatus	KEYWORD1
 

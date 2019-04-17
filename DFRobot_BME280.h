@@ -23,6 +23,7 @@
 
 #include "Arduino.h"
 #include "Wire.h"
+#include "SPI.h"
 
 #ifndef PROGMEM
 # define PROGMEM
@@ -267,19 +268,11 @@ protected:
 class DFRobot_BME280_IIC : public DFRobot_BME280 {
 public:
   /**
-   * @brief Enum pin sdo states
-   */
-  typedef enum {
-    eSdo_low,
-    eSdo_high
-  } eSdo_t;
-
-  /**
    * @brief DFRobot_BME280_IIC
    * @param pWire Which TwoWire peripheral to operate
-   * @param eSdo Pin sdo status
+   * @param addr Sensor addr
    */
-  DFRobot_BME280_IIC(TwoWire *pWire, eSdo_t eSdo);
+  DFRobot_BME280_IIC(TwoWire *pWire, uint8_t addr);
 
 protected:
   void    writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len);
@@ -290,6 +283,25 @@ protected:
 
   uint8_t   _addr;
 
+};
+
+class DFRobot_BME280_SPI : public DFRobot_BME280 {
+
+public:
+  /**
+   * @brief DFRobot_BME280_SPI
+   * @param pSpi Which SPIClass peripheral to oprate
+   * @param pin Sensor cs pin id
+   */
+  DFRobot_BME280_SPI(SPIClass *pSpi, uint16_t pin);
+
+protected:
+  void    writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len);
+  void    readReg(uint8_t reg, uint8_t *pBuf, uint16_t len);
+
+protected:
+  SPIClass    *_pSpi;
+  uint8_t     _pinCs;
 };
 
 #endif
