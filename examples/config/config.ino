@@ -16,7 +16,7 @@
 
 typedef DFRobot_BME280_IIC    BME;    // ******** use abbreviations instead of full names ********
 
-BME   bme(&Wire, BME::eSdo_low);
+BME   bme(&Wire, 0x76);
 
 #define SEA_LEVEL_PRESSURE    1015.0f   // sea level pressure
 
