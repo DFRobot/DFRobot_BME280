@@ -145,6 +145,12 @@ public:
     uint8_t   xlsb: 4;
   } sRegTemp_t;
 
+//test
+  typedef struct {
+    uint8_t   msb, lsb;
+  } sRegHumi_t;
+  
+  
   #define BME280_REG_START    0x88
   typedef struct {
     sCalibrateDig_t   calib;
@@ -161,7 +167,7 @@ public:
     uint8_t   reserved3;
     sRegPress_t   press;
     sRegTemp_t    temp;
-    uint16_t    humi;
+	sRegHumi_t    humi;
   } sRegs_t;
 
 // functions

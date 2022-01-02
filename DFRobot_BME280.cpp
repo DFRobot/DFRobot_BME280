@@ -48,9 +48,12 @@ DFRobot_BME280::DFRobot_BME280() {}
 DFRobot_BME280::eStatus_t DFRobot_BME280::begin()
 {
   __DBG_CODE(Serial.print("temp register addr: "); Serial.print(regOffset(&_sRegs.temp), HEX));
+  __DBG_CODE(Serial.print("press register addr: "); Serial.print(regOffset(&_sRegs.press), HEX));
+  __DBG_CODE(Serial.print("humi register addr: "); Serial.print(regOffset(&_sRegs.humi), HEX));
   __DBG_CODE(Serial.print("first register addr: "); Serial.print(regOffset(&_sRegs.calib), HEX));
   __DBG_CODE(Serial.print("status register addr: "); Serial.print(regOffset(&_sRegs.status), HEX));
   __DBG_CODE(Serial.print("id register addr: "); Serial.print(regOffset(&_sRegs.chip_id), HEX));
+  __DBG_CODE(Serial.print("reset addr: "); Serial.print(regOffset(&_sRegs.reset), HEX));
 
   uint8_t   temp = getReg(regOffset(&_sRegs.chip_id));
   if((temp == BME280_REG_CHIP_ID_DEFAULT) && (lastOperateStatus == eStatusOK)) {
@@ -214,9 +217,9 @@ int32_t DFRobot_BME280::getPressureRaw()
 
 int32_t DFRobot_BME280::getHumidityRaw()
 {
-  uint8_t   pBuf[2];
-  readReg(regOffset(&_sRegs.humi), (uint8_t*) pBuf, sizeof(pBuf));
-  return (((int32_t) pBuf[0] << 8) | (int32_t) pBuf[1]);
+  sRegHumi_t   sReg;
+  readReg(regOffset(&_sRegs.humi), (uint8_t*) &sReg, sizeof(sReg));
+  return (((uint32_t) sReg.msb << 8) | (uint32_t) sReg.lsb);
 }
 
 uint8_t DFRobot_BME280::getReg(uint8_t reg)
