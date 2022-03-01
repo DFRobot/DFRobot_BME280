@@ -214,9 +214,9 @@ int32_t DFRobot_BME280::getPressureRaw()
 
 int32_t DFRobot_BME280::getHumidityRaw()
 {
-  uint8_t   pBuf[2];
-  readReg(regOffset(&_sRegs.humi), (uint8_t*) pBuf, sizeof(pBuf));
-  return (((int32_t) pBuf[0] << 8) | (int32_t) pBuf[1]);
+  sRegHumi_t   sReg;
+  readReg(regOffset(&_sRegs.humi), (uint8_t*) &sReg, sizeof(sReg));
+  return (((int32_t) sReg.msb << 8) | (int32_t) sReg.lsb);
 }
 
 uint8_t DFRobot_BME280::getReg(uint8_t reg)
