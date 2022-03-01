@@ -3,14 +3,14 @@
 
  Copyright (C) <2019> <@DFRobot Frank>
 
-¡¡Permission is hereby granted, free of charge, to any person obtaining a copy of this
-¡¡software and associated documentation files (the "Software"), to deal in the Software
-¡¡without restriction, including without limitation the rights to use, copy, modify,
-¡¡merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-¡¡permit persons to whom the Software is furnished to do so.
+Â¡Â¡Permission is hereby granted, free of charge, to any person obtaining a copy of this
+Â¡Â¡software and associated documentation files (the "Software"), to deal in the Software
+Â¡Â¡without restriction, including without limitation the rights to use, copy, modify,
+Â¡Â¡merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+Â¡Â¡permit persons to whom the Software is furnished to do so.
 
-¡¡The above copyright notice and this permission notice shall be included in all copies or
-¡¡substantial portions of the Software.
+Â¡Â¡The above copyright notice and this permission notice shall be included in all copies or
+Â¡Â¡substantial portions of the Software.
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
  PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
@@ -250,7 +250,7 @@ void DFRobot_BME280_IIC::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
   if(_pWire->endTransmission() != 0)
     return;
 
-  _pWire->requestFrom(_addr, len);
+  _pWire->requestFrom(_addr, (uint8_t)len);
   for(uint16_t i = 0; i < len; i ++)
     pBuf[i] = _pWire->read();
   lastOperateStatus = eStatusOK;
