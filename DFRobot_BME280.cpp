@@ -1,24 +1,25 @@
-/*
- MIT License
-
- Copyright (C) <2019> <@DFRobot Frank>
-
-¡¡Permission is hereby granted, free of charge, to any person obtaining a copy of this
-¡¡software and associated documentation files (the "Software"), to deal in the Software
-¡¡without restriction, including without limitation the rights to use, copy, modify,
-¡¡merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-¡¡permit persons to whom the Software is furnished to do so.
-
-¡¡The above copyright notice and this permission notice shall be included in all copies or
-¡¡substantial portions of the Software.
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
- PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
- FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
+/*!
+ * @file  DFRobot_BME280.cpp
+ * @brief  Define infrastructure of DFRobot_BME280 class
+ * @details  It provides both SPI and I2C interfaces, which make it easy to make fast prototypes.
+ * @n  The sensor is especially adept in air pressure measurement; it has an offset 
+ * @n  temperature coefficient of ±1.5 Pa/K, equiv. to ±12.6 cm at 1 °C temperature change.
+ * @copyright  Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @license  The MIT License (MIT)
+ * @author  [Frank](jiehan.guo@dfrobot.com)
+ * @maintainer  [qsjhyy](yihuan.huang@dfrobot.com)
+ * @version  V1.0
+ * @date  2022-06-16
+ * @url  https://github.com/DFRobot/DFRobot_BME280
+ */
 #include "DFRobot_BME280.h"
+
+#define __DBG   0
+#if __DBG
+# define __DBG_CODE(x)   Serial.print("__DBG_CODE: "); Serial.print(__FUNCTION__); Serial.print(" "); Serial.print(__LINE__); Serial.print(" "); x; Serial.println()
+#else
+# define __DBG_CODE(x)
+#endif
 
 const DFRobot_BME280::sRegs_t PROGMEM   _sRegs = DFRobot_BME280::sRegs_t();
 #ifdef __AVR__
@@ -31,19 +32,12 @@ const platformBitWidth_t    _regsAddr = (platformBitWidth_t) &_sRegs;
 
 #define writeRegBitsHelper(reg, flied, val)   writeRegBits(regOffset(&(reg)), *(uint8_t*) &(flied), *(uint8_t*) &(val))
 
-#define __DBG   0
-#if __DBG
-# define __DBG_CODE(x)   Serial.print("__DBG_CODE: "); Serial.print(__FUNCTION__); Serial.print(" "); Serial.print(__LINE__); Serial.print(" "); x; Serial.println()
-#else
-# define __DBG_CODE(x)
-#endif
+DFRobot_BME280::DFRobot_BME280() {}
 
 uint8_t regOffset(const void *pReg)
 {
   return ((platformBitWidth_t) pReg - _regsAddr + BME280_REG_START);
 }
-
-DFRobot_BME280::DFRobot_BME280() {}
 
 DFRobot_BME280::eStatus_t DFRobot_BME280::begin()
 {

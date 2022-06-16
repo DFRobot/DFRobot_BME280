@@ -1,19 +1,16 @@
 /*!
- * read_data_spi.ino
- *
- * Download this demo to test read data from bme280, connect sensor through spi interface
- * Connect cs pin to io 2
- * Data will print on your serial monitor
- *
- * Copyright   [DFRobot](http://www.dfrobot.com), 2016
- * Copyright   GNU Lesser General Public License
- *
- * version  V1.0
- * date  12/03/2019
+ * @file  read_data_spi.ino
+ * @brief  Download this demo to test read data from bme280, connect sensor through
+ * @n  spi interface connect cs pin to io 2. Data will print on your serial monitor
+ * @copyright  Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @license  The MIT License (MIT)
+ * @author  [Frank](jiehan.guo@dfrobot.com)
+ * @maintainer  [qsjhyy](yihuan.huang@dfrobot.com)
+ * @version  V1.0
+ * @date  2022-06-16
+ * @url  https://github.com/DFRobot/DFRobot_BME280
  */
-
 #include "DFRobot_BME280.h"
-#include "Wire.h"
 
 typedef DFRobot_BME280_SPI    BME;    // ******** use abbreviations instead of full names ********
 

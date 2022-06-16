@@ -1,11 +1,40 @@
-eSdo_low	LITERAL1
-eSdo_high	LITERAL1
-eSdo_t	LITERAL1
+#######################################
+# Syntax Coloring Map For DFRobot_MCP2515
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
 
 DFRobot_BME280_IIC	KEYWORD1
 DFRobot_BME280_SPI	KEYWORD1
 
-lastOperateStatus	KEYWORD1
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+getTemperature	KEYWORD2
+getPressure	KEYWORD2
+getHumidity	KEYWORD2
+calAltitude	KEYWORD2
+reset	KEYWORD2
+setCtrlMeasMode	KEYWORD2
+setCtrlHumiSampling	KEYWORD2
+setCtrlMeasSamplingTemp	KEYWORD2
+setCtrlMeasSamplingPress	KEYWORD2
+setConfigFilter	KEYWORD2
+setConfigTStandby	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+lastOperateStatus	LITERAL1
+
+eSdo_low	LITERAL1
+eSdo_high	LITERAL1
+eSdo_t	LITERAL1
 
 eStatusOK	LITERAL1
 eStatusErr	LITERAL1
@@ -41,18 +70,3 @@ eConfigTStandby_1000	LITERAL1
 eConfigTStandby_2000	LITERAL1
 eConfigTStandby_4000	LITERAL1
 eConfigTStandby_t	LITERAL1
-
-begin	KEYWORD1
-getTemperature	KEYWORD1
-getPressure	KEYWORD1
-getHumidity	KEYWORD1
-calAltitude	KEYWORD1
-reset	KEYWORD1
-setCtrlMeasMode	KEYWORD1
-setCtrlHumiSampling	KEYWORD1
-setCtrlMeasSamplingTemp	KEYWORD1
-setCtrlMeasSamplingPress	KEYWORD1
-setConfigFilter	KEYWORD1
-setConfigTStandby	KEYWORD1
-
-BME	KEYWORD1

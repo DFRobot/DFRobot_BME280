@@ -1,10 +1,14 @@
-# BME280
-DFRobot's Temperature, Pressure and Approx altitude
+# DFRobot_BME280
+* [中文版](./README_CN.md)
 
-## DFRobot_BME280 Library for Arduino
----------------------------------------------------------
-Provides an Arduino library for reading and interpreting Bosch BME280 data over I2C. <br>
-Used to read current temperature, air pressure, calculate altitude and humidity.
+BME280 is an environmental sensor that integrates onboard temperature sensor, humidity sensor and barometer. The sensor has high precision, multiple functions, and a small form factor. It provides both SPI and I2C interfaces, which make it easy to make fast prototypes. It can be widely used in environmental monitoring, story height measurement, Internet of Things (IoT) control and other various enviroment related ideas! Tge Gravity I2C BME280 Environmental Sensor has based on BoSCH's newest MEMS sensor (Micro-Electro-Mechanical System). It is very stable when compared with similar sensors. The sensor is especially adept in air pressure measurement; it has an offset temperature coefficient of ±1.5 Pa/K, equiv. to ±12.6 cm at 1 °C temperature change. Therefore, the stable and multi-function form of the BME280 can be a perfect fit in many scenarios.
+
+![Product Photo Show](./resources/images/BME280.png)
+
+
+## Product Link (https://www.dfrobot.com/product-1606.html)
+    SKU: SEN0236
+
 
 ## Table of Contents
 
@@ -14,106 +18,64 @@ Used to read current temperature, air pressure, calculate altitude and humidity.
 * [History](#history)
 * [Credits](#credits)
 
-<snippet>
-<content>
+
+## Summary
+
+- Compatible with 3.3V/5V microcontrollers
+- Environmental monitoring: temperature, humidity and barometer
+- Gravity I2C interface and reserve XH2.54 SPI interface
+- Small size, convenient to install
+
 
 ## Installation
 
-To use this library download the zip file, uncompress it to a folder named DFRobot_BME280. 
-Download the zip file first to use this library and uncompress it to a folder named DFRobot_BME280. 
+There two methods:
+
+1. To use this library, first download the library file, paste it into the \Arduino\libraries directory, then open the examples folder and run the demo in the folder.
+2. Search the DFRobot_BME280 library from the Arduino Software Library Manager and download it.
+
 
 ## Methods
 
 ```C++
 
-class DFRobot_BME280 {
-// defines
-public:
   /**
-   * @brief Enum global status
+   * @fn DFRobot_BME280
+   * @brief the DFRobot_BME280 class' constructor.
+   * @return None
    */
-  typedef enum {
-    eStatusOK,
-    eStatusErr,
-    eStatusErrDeviceNotDetected,
-    eStatusErrParameter
-  } eStatus_t;
-
-  /**
-   * @brief Enum control measurement mode (power)
-   */
-  typedef enum {
-    eCtrlMeasMode_sleep,
-    eCtrlMeasMode_forced,
-    eCtrlMeasMode_normal = 0x03
-  } eCtrlMeasMode_t;
-
-  /**
-   * @brief Enum sampling
-   */
-  typedef enum {
-    eSampling_no,
-    eSampling_X1,
-    eSampling_X2,
-    eSampling_X4,
-    eSampling_X8,
-    eSampling_X16
-  } eSampling_t;
-
-  /**
-   * @brief Enum config filter
-   */
-  typedef enum {
-    eConfigFilter_off,
-    eConfigFilter_X2,
-    eConfigFilter_X4,
-    eConfigFilter_X8,
-    eConfigFilter_X16
-  } eConfigFilter_t;
-
-  /**
-   * @brief Enum config standby time, unit ms
-   */
-  typedef enum {
-    eConfigTStandby_0_5,    // 0.5 ms
-    eConfigTStandby_62_5,
-    eConfigTStandby_125,
-    eConfigTStandby_250,
-    eConfigTStandby_500,
-    eConfigTStandby_1000,
-    eConfigTStandby_2000,
-    eConfigTStandby_4000
-  } eConfigTStandby_t;
-
-// functions
-public:
   DFRobot_BME280();
 
   /**
+   * @fn begin
    * @brief begin Sensor begin
    * @return Enum of eStatus_t
    */
   eStatus_t   begin();
 
   /**
+   * @fn getTemperature
    * @brief getTemperature Get temperature
    * @return Temprature in Celsius
    */
   float       getTemperature();
 
   /**
+   * @fn getPressure
    * @brief getPressure Get pressure
    * @return Pressure in pa
    */
   uint32_t    getPressure();
-  
+
   /**
+   * @fn getHumidity
    * @brief getHumidity Get humidity
    * @return Humidity in percent
    */
   float       getHumidity();
 
   /**
+   * @fn calAltitude
    * @brief calAltitude Calculate altitude
    * @param seaLevelPressure Sea level pressure
    * @param pressure Pressure in pa
@@ -122,78 +84,55 @@ public:
   float       calAltitude(float seaLevelPressure, uint32_t pressure);
 
   /**
+   * @fn reset
    * @brief reset Reset sensor
    */
   void    reset();
 
   /**
+   * @fn setCtrlMeasMode
    * @brief setCtrlMeasMode Set control measure mode
    * @param eMode One enum of eCtrlMeasMode_t
    */
   void    setCtrlMeasMode(eCtrlMeasMode_t eMode);
 
   /**
+   * @fn setCtrlMeasSamplingTemp
    * @brief setCtrlMeasSamplingTemp Set control measure temperature oversampling
    * @param eSampling One enum of eSampling_t
    */
   void    setCtrlMeasSamplingTemp(eSampling_t eSampling);
 
   /**
+   * @fn setCtrlMeasSamplingPress
    * @brief setCtrlMeasSamplingPress Set control measure pressure oversampling
    * @param eSampling One enum of eSampling_t
    */
   void    setCtrlMeasSamplingPress(eSampling_t eSampling);
-  
+
   /**
+   * @fn setCtrlHumiSampling
    * @brief setCtrlHumiSampling Set control measure humidity oversampling
    * @param eSampling One enum of eSampling_t
    */
   void    setCtrlHumiSampling(eSampling_t eSampling);
-  
+
   /**
+   * @fn setConfigFilter
    * @brief setConfigFilter Set config filter
    * @param eFilter One enum of eConfigFilter_t
    */
   void    setConfigFilter(eConfigFilter_t eFilter);
 
   /**
+   * @fn setConfigTStandby
    * @brief setConfigTStandby Set config standby time
    * @param eT One enum of eConfigTStandby_t
    */
   void    setConfigTStandby(eConfigTStandby_t eT);
 
-public:
-  /**
-   * @brief lastOperateStatus Last operate status
-   */
-  eStatus_t   lastOperateStatus;
-  
-};
-
-class DFRobot_BME280_IIC : public DFRobot_BME280 {
-
-public:
-
-  /**
-   * @brief DFRobot_BME280_IIC
-   * @param pWire Which TwoWire peripheral to operate
-   * @param eSdo Pin sdo status
-   */
-  DFRobot_BME280_IIC(TwoWire *pWire, eSdo_t eSdo);
-};
-
-class DFRobot_BME280_SPI : public DFRobot_BME280 {
-
-public:
-  /**
-   * @brief DFRobot_BME280_SPI
-   * @param pSpi Which SPIClass peripheral to oprate
-   * @param pin Sensor cs pin id
-   */
-  DFRobot_BME280_SPI(SPIClass *pSpi, uint16_t pin);
-};
-
 ```
+
 
 ## Compatibility
 
@@ -203,11 +142,13 @@ FireBeetle-ESP32  |      √       |             |            |
 FireBeetle-ESP8266  |      √       |             |            | 
 Arduino uno |       √      |             |            | 
 
+
 ## History
 
-- Nov 31, 2018 - Version 0.1 released.
-- March 12, 2019 - Version 0.1 remake.
+- 2022/06/16 - Version 1.0.0 released.
+
 
 ## Credits
 
 Written by Frank(jiehan.guo@dfrobot.com), 2018. (Welcome to our [website](https://www.dfrobot.com/))
+
