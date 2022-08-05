@@ -146,9 +146,10 @@ Arduino uno |       √      |             |            |
 ## History
 
 - 2022/06/16 - Version 1.0.0 released.
+- 2022/08/05 - Version 1.0.0 released.
 
 
 ## Credits
 
-Written by Frank(jiehan.guo@dfrobot.com), 2018. (Welcome to our [website](https://www.dfrobot.com/))
+Written by Frank(jiehan.guo@dfrobot.com), 2022. (Welcome to our [website](https://www.dfrobot.com/))
 

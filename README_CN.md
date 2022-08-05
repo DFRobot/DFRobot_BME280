@@ -149,9 +149,10 @@ FireBeetle-ESP32   |      √       |              |             |
 ## 历史
 
 - 2022/06/16 - 1.0.0 版本
+- 2022/08/05 - 1.0.1 版本
 
 
 ## 创作者
 
-Written by Frank(jiehan.guo@dfrobot.com), 2018. (Welcome to our [website](https://www.dfrobot.com/))
+Written by Frank(jiehan.guo@dfrobot.com), 2022. (Welcome to our [website](https://www.dfrobot.com/))
 

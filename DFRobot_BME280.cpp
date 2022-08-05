@@ -46,7 +46,7 @@ DFRobot_BME280::eStatus_t DFRobot_BME280::begin()
   __DBG_CODE(Serial.print("status register addr: "); Serial.print(regOffset(&_sRegs.status), HEX));
   __DBG_CODE(Serial.print("id register addr: "); Serial.print(regOffset(&_sRegs.chip_id), HEX));
 
-  uint8_t   temp = getReg(regOffset(&_sRegs.chip_id));
+  uint8_t temp = getReg(regOffset(&_sRegs.chip_id));
   if((temp == BME280_REG_CHIP_ID_DEFAULT) && (lastOperateStatus == eStatusOK)) {
     reset();
     delay(300);
@@ -56,7 +56,7 @@ DFRobot_BME280::eStatus_t DFRobot_BME280::begin()
     setCtrlHumiSampling(eSampling_X8);
     setConfigFilter(eConfigFilter_off);
     setConfigTStandby(eConfigTStandby_125);
-    setCtrlMeasMode(eCtrlMeasMode_normal);    // set control measurement mode to make these settings effective
+    setCtrlMeasMode(eCtrlMeasMode_normal);   // set control measurement mode to make these settings effective
   } else
     lastOperateStatus = eStatusErrDeviceNotDetected;
   return lastOperateStatus;
@@ -175,6 +175,7 @@ void DFRobot_BME280::setConfigTStandby(eConfigTStandby_t eT)
   sRegFlied.t_sb = 0xff; sRegVal.t_sb = eT;
   writeRegBitsHelper(_sRegs.config, sRegFlied, sRegVal);
 }
+
 void DFRobot_BME280::getCalibrate()
 {
   readReg(regOffset(&_sRegs.calib), (uint8_t*) &_sCalib, sizeof(_sCalib));

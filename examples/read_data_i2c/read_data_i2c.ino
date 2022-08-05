@@ -14,8 +14,8 @@
 
 typedef DFRobot_BME280_IIC    BME;    // ******** use abbreviations instead of full names ********
 
-/**IIC address is 0x77 when pin SDO is high (BME280 sensor module)*/
-/**IIC address is 0x76 when pin SDO is low  (SIM7000)*/
+/**IIC address is 0x77 when pin SDO is high */
+/**IIC address is 0x76 when pin SDO is low */
 BME   bme(&Wire, 0x77);   // select TwoWire peripheral and set sensor address
 
 #define SEA_LEVEL_PRESSURE    1015.0f
