@@ -1,7 +1,7 @@
 /*!
- * @file  read_data_spi.ino
+ * @file  raedDataI2C.ino
  * @brief  Download this demo to test read data from bme280, connect sensor through
- * @n  spi interface connect cs pin to io 2. Data will print on your serial monitor
+ * @n  IIC interface. Data will print on your serial monitor
  * @copyright  Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license  The MIT License (MIT)
  * @author  [Frank](jiehan.guo@dfrobot.com)
@@ -12,15 +12,11 @@
  */
 #include "DFRobot_BME280.h"
 
-typedef DFRobot_BME280_SPI    BME;    // ******** use abbreviations instead of full names ********
+typedef DFRobot_BME280_IIC    BME;    // ******** use abbreviations instead of full names ********
 
-#ifdef __AVR__
-# define PIN_CS   2
-#else
-# define PIN_CS   D2
-#endif
-
-BME   bme(&SPI, PIN_CS);   // select TwoWire peripheral and set cs pin id
+/**IIC address is 0x77 when pin SDO is high */
+/**IIC address is 0x76 when pin SDO is low */
+BME   bme(&Wire, 0x77);   // select TwoWire peripheral and set sensor address
 
 #define SEA_LEVEL_PRESSURE    1015.0f
 

@@ -202,7 +202,7 @@ To use the library, first download the library file, paste it into the directory
 ## History
 
 - 2022/06/16 - Version 1.0.0 released.
-- 2022/08/05 - Version 1.0.0 released.
+- 2022/09/22 - Version 1.0.1 released.
 
 ## Credits
 

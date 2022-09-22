@@ -77,7 +77,7 @@ Gravity I2C BME280环境传感器使用BOSCH最新MEMS微机电传感器，具�
     def get_altitude(self):
 
     '''!
-      @brief 获取数据准备状态
+      @brief 获取数据准备（测量）状态
       @return True表示数据准备就绪
     '''
     @property
@@ -190,7 +190,7 @@ Gravity I2C BME280环境传感器使用BOSCH最新MEMS微机电传感器，具�
 ## 历史
 
 - 2022/06/16 - 1.0.0 版本
-- 2022/08/05 - 1.0.1 版本
+- 2022/09/22 - 1.0.1 版本
 
 
 ## 创作者
