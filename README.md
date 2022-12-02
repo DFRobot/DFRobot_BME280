@@ -147,6 +147,7 @@ Arduino uno |       √      |             |            |
 
 - 2022/06/16 - Version 1.0.0 released.
 - 2022/09/22 - Version 1.0.1 released.
+- 2022/12/02 - Version 1.0.2 released.
 
 
 ## Credits

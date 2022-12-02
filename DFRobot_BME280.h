@@ -226,7 +226,7 @@ public:
    * @brief begin Sensor begin
    * @return Enum of eStatus_t
    */
-  eStatus_t   begin();
+  virtual eStatus_t   begin();
 
   /**
    * @fn getTemperature
@@ -336,6 +336,13 @@ public:
    */
   DFRobot_BME280_IIC(TwoWire *pWire, uint8_t addr);
 
+  /**
+   * @fn begin
+   * @brief begin Sensor begin
+   * @return Enum of eStatus_t
+   */
+  virtual eStatus_t   begin();
+
 protected:
   void    writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len);
   void    readReg(uint8_t reg, uint8_t *pBuf, uint16_t len);
@@ -355,6 +362,13 @@ public:
    * @param pin Sensor cs pin id
    */
   DFRobot_BME280_SPI(SPIClass *pSpi, uint16_t pin);
+
+  /**
+   * @fn begin
+   * @brief begin Sensor begin
+   * @return Enum of eStatus_t
+   */
+  virtual eStatus_t   begin();
 
 protected:
   void    writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len);

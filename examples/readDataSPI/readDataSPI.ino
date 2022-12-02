@@ -39,7 +39,6 @@ void printLastOperateStatus(BME::eStatus_t eStatus)
 void setup()
 {
   Serial.begin(115200);
-  bme.reset();
   Serial.println("bme read data test");
   while(bme.begin() != BME::eStatusOK) {
     Serial.println("bme begin faild");

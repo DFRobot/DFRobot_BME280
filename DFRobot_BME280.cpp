@@ -137,42 +137,48 @@ void DFRobot_BME280::reset()
 void DFRobot_BME280::setCtrlMeasMode(eCtrlMeasMode_t eMode)
 {
   sRegCtrlMeas_t    sRegFlied = {0}, sRegVal = {0};
-  sRegFlied.mode = 0xff; sRegVal.mode = eMode;
+  // sRegFlied.mode = 0xff;
+  sRegVal.mode = eMode;
   writeRegBitsHelper(_sRegs.ctrl_meas, sRegFlied, sRegVal);
 }
 
 void DFRobot_BME280::setCtrlMeasSamplingTemp(eSampling_t eSampling)
 {
   sRegCtrlMeas_t    sRegFlied = {0}, sRegVal = {0};
-  sRegFlied.osrs_t = 0xff; sRegVal.osrs_t = eSampling;
+  // sRegFlied.osrs_t = 0xff;
+  sRegVal.osrs_t = eSampling;
   writeRegBitsHelper(_sRegs.ctrl_meas, sRegFlied, sRegVal);
 }
 
 void DFRobot_BME280::setCtrlMeasSamplingPress(eSampling_t eSampling)
 {
   sRegCtrlMeas_t    sRegFlied = {0}, sRegVal = {0};
-  sRegFlied.osrs_p = 0xff; sRegVal.osrs_p = eSampling;
+  // sRegFlied.osrs_p = 0xff;
+  sRegVal.osrs_p = eSampling;
   writeRegBitsHelper(_sRegs.ctrl_meas, sRegFlied, sRegVal);
 }
 
 void DFRobot_BME280::setCtrlHumiSampling(eSampling_t eSampling)
 {
   sRegCtrlHum_t   sRegFlied = {0}, sRegVal = {0};
-  sRegFlied.osrs_h = 0xff; sRegVal.osrs_h = eSampling;
+  // sRegFlied.osrs_h = 0xff;
+  sRegVal.osrs_h = eSampling;
   writeRegBitsHelper(_sRegs.ctrl_hum, sRegFlied, sRegVal);
 }
 
 void DFRobot_BME280::setConfigFilter(eConfigFilter_t eFilter)
 {
   sRegConfig_t    sRegFlied = {0}, sRegVal = {0};
-  sRegFlied.filter = 0xff; sRegVal.filter = eFilter;
+  // sRegFlied.filter = 0xff;
+  sRegVal.filter = eFilter;
   writeRegBitsHelper(_sRegs.config, sRegFlied, sRegVal);
 }
 
 void DFRobot_BME280::setConfigTStandby(eConfigTStandby_t eT)
 {
   sRegConfig_t    sRegFlied = {0}, sRegVal = {0};
-  sRegFlied.t_sb = 0xff; sRegVal.t_sb = eT;
+  // sRegFlied.t_sb = 0xff;
+  sRegVal.t_sb = eT;
   writeRegBitsHelper(_sRegs.config, sRegFlied, sRegVal);
 }
 
@@ -236,10 +242,16 @@ DFRobot_BME280_IIC::DFRobot_BME280_IIC(TwoWire *pWire, uint8_t addr)
   _addr = addr;
 }
 
+DFRobot_BME280::eStatus_t DFRobot_BME280_IIC::begin(void)
+{
+  _pWire->begin();   // Wire.h(I2C)library function initialize wire library
+  return DFRobot_BME280::begin();   // Use the initialization function of the parent class
+}
+
 void DFRobot_BME280_IIC::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
 {
   lastOperateStatus = eStatusErrDeviceNotDetected;
-  _pWire->begin();
+  // _pWire->begin();
   _pWire->beginTransmission(_addr);
   _pWire->write(reg);
   if(_pWire->endTransmission() != 0)
@@ -254,7 +266,7 @@ void DFRobot_BME280_IIC::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
 void DFRobot_BME280_IIC::writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
 {
   lastOperateStatus = eStatusErrDeviceNotDetected;
-  _pWire->begin();
+  // _pWire->begin();
   _pWire->beginTransmission(_addr);
   _pWire->write(reg);
   for(uint16_t i = 0; i < len; i ++)
@@ -267,11 +279,16 @@ void DFRobot_BME280_IIC::writeReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
 DFRobot_BME280_SPI::DFRobot_BME280_SPI(SPIClass *pSpi, uint16_t pin)
 {
   _pSpi = pSpi;
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, HIGH);
   _pinCs = pin;
-  _pSpi->begin();
   lastOperateStatus = eStatusOK;
+}
+
+DFRobot_BME280::eStatus_t DFRobot_BME280_SPI::begin(void)
+{
+  pinMode(_pinCs, OUTPUT);
+  digitalWrite(_pinCs, HIGH);
+  _pSpi->begin();
+  return DFRobot_BME280::begin();
 }
 
 void DFRobot_BME280_SPI::readReg(uint8_t reg, uint8_t *pBuf, uint16_t len)
